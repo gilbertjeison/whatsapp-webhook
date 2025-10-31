@@ -30,10 +30,13 @@ class GeminiService {
             chat: this.ai.chats.create({
                 model: "gemini-2.5-flash",
                 config: {
-                    maxOutputTokens: 1000,
+                    maxOutputTokens: 2048,  // Increased from 1000 to handle longer responses
                     temperature: 0.7,
                     topP: 0.8,
                     topK: 40,
+                    thinkingConfig: {
+                        mode: 'THINKING_MODE_UNSPECIFIED'  // Disable extended thinking to prevent token exhaustion
+                    }
                 },
             }),
             lastActivity: Date.now(),
@@ -137,6 +140,19 @@ class GeminiService {
 
             if (!responseText || responseText.trim() === '') {
                 console.error('Invalid response structure:', JSON.stringify(result, null, 2));
+
+                // Check if response was truncated due to token limits
+                if (result && result.candidates && result.candidates.length > 0) {
+                    const finishReason = result.candidates[0].finishReason;
+                    if (finishReason === 'MAX_TOKENS') {
+                        throw new Error('Response exceeded token limit. Please try a shorter question or rephrase your request.');
+                    } else if (finishReason === 'SAFETY') {
+                        throw new Error('Response blocked due to safety concerns. Please rephrase your question.');
+                    } else if (finishReason === 'RECITATION') {
+                        throw new Error('Response blocked due to recitation. Please try a different question.');
+                    }
+                }
+
                 throw new Error('Invalid response from AI');
             }
 

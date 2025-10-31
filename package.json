@@ -1,0 +1,35 @@
+{
+  "name": "topped",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/app.js",
+    "dev": "npx nodemon src/app.js",
+    "lint": "eslint src/",
+    "format": "prettier --write 'src/**/*.{js,json}'",
+    "prestart": "npm install --production",
+    "postinstall": "node -e \"require('fs').mkdirSync('logs', { recursive: true })\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^1.28.0",
+    "axios": "^1.13.1",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.0",
+    "express-validator": "^7.3.0",
+    "express-winston": "^4.2.0",
+    "helmet": "^8.1.0",
+    "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

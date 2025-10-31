@@ -1,0 +1,21 @@
+# Ignore dependencies
+node_modules/
+
+# Environment files
+.env
+.env.development
+.env.production
+.env.local
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# IDE
+.vscode/
+.idea/

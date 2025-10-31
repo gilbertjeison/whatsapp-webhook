@@ -28,15 +28,12 @@ class GeminiService {
     _initializeChat() {
         return {
             chat: this.ai.chats.create({
-                model: "gemini-2.5-flash",
+                model: "gemini-2.0-flash-exp",  // Use non-thinking model to prevent token exhaustion
                 config: {
                     maxOutputTokens: 2048,  // Increased from 1000 to handle longer responses
                     temperature: 0.7,
                     topP: 0.8,
-                    topK: 40,
-                    thinkingConfig: {
-                        mode: 'THINKING_MODE_UNSPECIFIED'  // Disable extended thinking to prevent token exhaustion
-                    }
+                    topK: 40
                 },
             }),
             lastActivity: Date.now(),

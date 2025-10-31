@@ -5,23 +5,14 @@ class WebhookController {
     async handleIncomingMessage(req, res) {
         try {
             console.log('\n=== Webhook Request Received ===');
-            console.log('Request body:', JSON.stringify(req.body, null, 2));
 
             const value = req.body.entry?.[0]?.changes[0]?.value;
             const message = value?.messages?.[0];
             const sender = value?.contacts?.[0];
-            
-            console.log('\nExtracted Data:');
-            console.log('Message:', message ? JSON.stringify(message, null, 2) : 'No message found');
-            console.log('Sender:', sender ? JSON.stringify(sender, null, 2) : 'No sender info found');
-            
+
             if (message) {
-                console.log('\nProcessing message...');
                 // Pass both message and sender info to handler
                 await messageHandler.handleMessage(message, sender);
-                console.log('Message processing completed');
-            } else {
-                console.log('No message to process');
             }
             
             res.sendStatus(200);

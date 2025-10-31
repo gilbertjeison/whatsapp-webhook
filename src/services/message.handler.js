@@ -20,7 +20,7 @@ class MessageHandler {
 
         // Basic message validation
         if (!message?.type || !message?.from || !message?.id) {
-            console.log('Invalid message format:', message);
+            console.error('Invalid message format');
             return;
         }
 
@@ -30,13 +30,8 @@ class MessageHandler {
             return;
         }
 
-        // Log sender information if available
+        // Get sender name for personalized responses
         const senderName = sender?.profile?.name || 'Unknown';
-        const senderId = sender?.wa_id || message.from;
-        console.log('\nSender Information:');
-        console.log(`Name: ${senderName}`);
-        console.log(`ID: ${senderId}`);
-        console.log('Message type:', message.type);
 
         // Check for sensitive information in message
         if (message.type === 'text') {
@@ -66,14 +61,10 @@ class MessageHandler {
             }
         }
 
-        console.log(this.assistantState[message.from]);
-
         try {
             // Handle interactive messages (button responses)
             if (message.type === "interactive" && message.interactive?.type === "button_reply") {
                 const buttonId = message.interactive.button_reply.id;
-                const buttonTitle = message.interactive.button_reply.title;
-                console.log(`\nButton clicked: ID='${buttonId}', Title='${buttonTitle}'`);
 
                 switch (buttonId) {
                     case "catalog":
@@ -181,15 +172,11 @@ class MessageHandler {
             // Handle text messages
             else if (message.type === "text" && message.text?.body) {
                 const messageText = message.text.body;
-                console.log('\nMessage Content:', messageText);
 
                 if (GreetingUtil.isGreeting(messageText)) {
-                    console.log('Detected greeting message');
                     const lang = GreetingUtil.getLanguage(messageText);
-                    console.log('Detected language:', lang);
                     const greeting = GreetingUtil.getTimeBasedResponse(lang);
 
-                    console.log('Sending interactive greeting...');
                     const menuMessage = whatsappService.createButtonMessage(
                         `${greeting} ${senderName}! 👋\n¡Bienvenida a Topped! ¿Qué te gustaría ver?`,
                         MAIN_MENU_BUTTONS
@@ -199,7 +186,6 @@ class MessageHandler {
                 else if (this.assistantState[message.from]) {
                     await this.handleAssistantFlow(message.from, message);
                 } else {
-                    console.log('Non-greeting message, showing main menu');
                     const menuMessage = whatsappService.createButtonMessage(
                         "¡Hola! ¿En qué podemos ayudarte hoy? 💖",
                         MAIN_MENU_BUTTONS
@@ -207,10 +193,7 @@ class MessageHandler {
                     await whatsappService.sendMessage(message.from, menuMessage, message.id);
                 }
 
-                console.log('Response sent successfully');
-                console.log('Marking message as read...');
                 await whatsappService.markMessageAsRead(message.id);
-                console.log('Message marked as read');
             }
 
         } catch (error) {

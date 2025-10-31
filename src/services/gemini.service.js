@@ -113,16 +113,6 @@ class GeminiService {
                 1000 // base delay in ms
             );
 
-            // Log full response structure for debugging
-            console.log('API Response received:', {
-                hasResult: !!result,
-                resultKeys: result ? Object.keys(result) : [],
-                hasText: result && 'text' in result,
-                textType: result && typeof result.text,
-                textValue: result && result.text,
-                hasCandidates: result && 'candidates' in result
-            });
-
             // Validate response with multiple approaches
             let responseText = null;
 
@@ -219,7 +209,6 @@ class GeminiService {
     async chat(userId, message) {
         try {
             console.log(`\n=== Gemini Service: Processing chat for user ${userId} ===`);
-            console.log(`Message: "${message}"`);
 
             // Check rate limits
             this._checkRateLimit(userId);
@@ -240,11 +229,6 @@ class GeminiService {
             const result = await this._getResponse(session, message);
 
             if (typeof result.text === 'undefined' || result.text === null || result.text === '') {
-                console.error('Result validation failed:', {
-                    hasText: 'text' in result,
-                    textType: typeof result.text,
-                    textValue: result.text
-                });
                 throw new Error('Empty response from AI');
             }
 
@@ -259,7 +243,6 @@ class GeminiService {
 
             const responseText = result.text;
             console.log('Generated response successfully');
-            console.log('Response length:', responseText.length);
 
             return {
                 text: responseText,

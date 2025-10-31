@@ -110,18 +110,49 @@ class GeminiService {
                 1000 // base delay in ms
             );
 
-            // Validate response
-            if (!result || typeof result.text === 'undefined' || result.text === null || result.text === '') {
+            // Log full response structure for debugging
+            console.log('API Response received:', {
+                hasResult: !!result,
+                resultKeys: result ? Object.keys(result) : [],
+                hasText: result && 'text' in result,
+                textType: result && typeof result.text,
+                textValue: result && result.text,
+                hasCandidates: result && 'candidates' in result
+            });
+
+            // Validate response with multiple approaches
+            let responseText = null;
+
+            // Try direct text property first (standard SDK approach)
+            if (result && typeof result.text === 'string' && result.text.trim() !== '') {
+                responseText = result.text;
+            }
+            // Fallback: try candidates array structure
+            else if (result && result.candidates && result.candidates.length > 0) {
+                const candidate = result.candidates[0];
+                if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                    responseText = candidate.content.parts[0].text;
+                }
+            }
+
+            if (!responseText || responseText.trim() === '') {
+                console.error('Invalid response structure:', JSON.stringify(result, null, 2));
                 throw new Error('Invalid response from AI');
             }
 
-            // Cache the response
+            // Normalize the response object to always have a text property
+            const normalizedResult = {
+                text: responseText,
+                originalResponse: result
+            };
+
+            // Cache the normalized response
             this.responseCache.set(cacheKey, {
-                response: result,
+                response: normalizedResult,
                 timestamp: Date.now()
             });
 
-            return result;
+            return normalizedResult;
         } catch (error) {
             console.error('Error getting response:', error);
 
@@ -172,10 +203,11 @@ class GeminiService {
     async chat(userId, message) {
         try {
             console.log(`\n=== Gemini Service: Processing chat for user ${userId} ===`);
-            
+            console.log(`Message: "${message}"`);
+
             // Check rate limits
             this._checkRateLimit(userId);
-            
+
             // Get or create a chat session
             let session = this.conversations.get(userId);
             if (!session) {
@@ -192,6 +224,11 @@ class GeminiService {
             const result = await this._getResponse(session, message);
 
             if (typeof result.text === 'undefined' || result.text === null || result.text === '') {
+                console.error('Result validation failed:', {
+                    hasText: 'text' in result,
+                    textType: typeof result.text,
+                    textValue: result.text
+                });
                 throw new Error('Empty response from AI');
             }
 
@@ -206,6 +243,7 @@ class GeminiService {
 
             const responseText = result.text;
             console.log('Generated response successfully');
+            console.log('Response length:', responseText.length);
 
             return {
                 text: responseText,
@@ -213,9 +251,19 @@ class GeminiService {
             };
         } catch (error) {
             console.error("Error in chat:", error);
+            console.error("Error stack:", error.stack);
+
             // Clear the conversation if there's an error to prevent stuck states
             this.conversations.delete(userId);
-            throw new Error("Failed to process chat message");
+
+            // Provide more specific error messages
+            if (error.message && error.message.includes('Rate limit')) {
+                throw new Error("Rate limit exceeded. Please wait a moment.");
+            } else if (error.message && error.message.includes('Invalid response')) {
+                throw new Error("Failed to get valid response from AI. Please try again.");
+            } else {
+                throw new Error("Failed to process chat message");
+            }
         }
     }
 

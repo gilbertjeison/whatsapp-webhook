@@ -111,7 +111,7 @@ class GeminiService {
             );
 
             // Validate response
-            if (!result || !result.text) {
+            if (!result || typeof result.text === 'undefined' || result.text === null || result.text === '') {
                 throw new Error('Invalid response from AI');
             }
 
@@ -191,7 +191,7 @@ class GeminiService {
             // Send the message (retry logic is handled inside _getResponse)
             const result = await this._getResponse(session, message);
 
-            if (!result.text) {
+            if (typeof result.text === 'undefined' || result.text === null || result.text === '') {
                 throw new Error('Empty response from AI');
             }
 
